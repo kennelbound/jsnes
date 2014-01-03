@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 var JSNES = function(opts) {
     this.opts = {
         ui: JSNES.DummyUI,
-        swfPath: 'lib/',
         
         preferredFrameRate: 60,
         fpsInterval: 500, // Time between updating FPS in ms

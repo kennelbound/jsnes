@@ -171,9 +171,13 @@ if (typeof jQuery !== 'undefined') {
                 /*
                  * Sound
                  */
-                self.dynamicaudio = new DynamicAudio({
-                    swf: nes.opts.swfPath+'dynamicaudio.swf'
-                });
+                var AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (AudioContext) {
+                    self.audio = new AudioContext();
+                } else {
+                    self.nes.opts.emulateSound = false;
+                    self.buttons.sound.prop('disabled', true);
+                }
             };
         
             UI.prototype = {    
@@ -275,8 +279,14 @@ if (typeof jQuery !== 'undefined') {
                     }
                 },
             
-                writeAudio: function(samples) {
-                    return this.dynamicaudio.writeInt(samples);
+                writeAudio: function(leftSamples, rightSamples) {
+                    var buffer = this.audio.createBuffer(2, leftSamples.length, this.nes.papu.sampleRate);
+                    buffer.getChannelData(0).set(leftSamples);
+                    buffer.getChannelData(1).set(rightSamples);
+                    var source = this.audio.createBufferSource();
+                    source.buffer = buffer;
+                    source.connect(this.audio.destination);
+                    source.start(0);
                 },
             
                 writeFrame: function(buffer, prevBuffer) {

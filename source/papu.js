@@ -39,7 +39,8 @@ JSNES.PAPU = function(nes) {
     this.noiseWavelengthLookup = null;
     this.square_table = null;
     this.tnd_table = null;
-    this.sampleBuffer = new Array(this.bufferSize*2);
+    this.leftSampleBuffer = new Array(this.bufferSize);
+    this.rightSampleBuffer = new Array(this.bufferSize);
 
     this.frameIrqEnabled = false;
     this.frameIrqActive = null;
@@ -614,12 +615,14 @@ JSNES.PAPU.prototype = {
         this.prevSampleL += smpDiffL;
         this.smpAccumL += smpDiffL - (this.smpAccumL >> 10);
         sampleValueL = this.smpAccumL;
-        
+        sampleValueL /= 32768;
+
         // Remove DC from right channel:
         var smpDiffR     = sampleValueR - this.prevSampleR;
         this.prevSampleR += smpDiffR;
         this.smpAccumR  += smpDiffR - (this.smpAccumR >> 10);
         sampleValueR = this.smpAccumR;
+        sampleValueR /= 32768;
 
         // Write:
         if (sampleValueL > this.maxSample) {
@@ -628,13 +631,14 @@ JSNES.PAPU.prototype = {
         if (sampleValueL < this.minSample) {
             this.minSample = sampleValueL;
         }
-        this.sampleBuffer[this.bufferIndex++] = sampleValueL;
-        this.sampleBuffer[this.bufferIndex++] = sampleValueR;
-        
+        this.leftSampleBuffer[this.bufferIndex++] = sampleValueL;
+        this.rightSampleBuffer[this.bufferIndex++] = sampleValueR;
+
         // Write full buffer
-        if (this.bufferIndex === this.sampleBuffer.length) {
-            this.nes.ui.writeAudio(this.sampleBuffer);
-            this.sampleBuffer = new Array(this.bufferSize*2);
+        if (this.bufferIndex === this.leftSampleBuffer.length) {
+            this.nes.ui.writeAudio(this.leftSampleBuffer, this.rightSampleBuffer);
+            this.leftSampleBuffer = new Array(this.bufferSize);
+            this.rightSampleBuffer = new Array(this.bufferSize);
             this.bufferIndex = 0;
         }
 
