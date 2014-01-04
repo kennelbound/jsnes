@@ -63,9 +63,9 @@ var croomBenchmark = (function() {
         }
     
         // Hit enter on start screen to start scrolling
-        nes.keyboard.keyDown({keyCode: 13});
+        nes.input.keyDown({keyCode: 13});
         nes.frame();
-        nes.keyboard.keyUp({keyCode: 13});
+        nes.input.keyUp({keyCode: 13});
     
         for (i=0; i<94; i++) {
             nes.frame();

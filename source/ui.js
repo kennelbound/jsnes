@@ -159,13 +159,13 @@ if (typeof jQuery !== 'undefined') {
                  */
                 $(document).
                     bind('keydown', function(evt) {
-                        self.nes.keyboard.keyDown(evt); 
+                        self.nes.input.keyDown(evt);
                     }).
                     bind('keyup', function(evt) {
-                        self.nes.keyboard.keyUp(evt); 
+                        self.nes.input.keyUp(evt);
                     }).
                     bind('keypress', function(evt) {
-                        self.nes.keyboard.keyPress(evt);
+                        self.nes.input.keyPress(evt);
                     });
             
                 /*

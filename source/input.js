@@ -16,8 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Keyboard events are bound in the UI
-JSNES.Keyboard = function() {
+// Input events are bound in the UI
+JSNES.Input = function() {
     var i;
     
     this.keys = {
@@ -41,7 +41,7 @@ JSNES.Keyboard = function() {
     }
 };
 
-JSNES.Keyboard.prototype = {
+JSNES.Input.prototype = {
     setKey: function(key, value) {
         switch (key) {
             case 88: this.state1[this.keys.KEY_A] = value; break;      // X
