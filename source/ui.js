@@ -155,7 +155,7 @@ if (typeof jQuery !== 'undefined') {
                 self.resetCanvas();
             
                 /*
-                 * Keyboard
+                 * Input
                  */
                 $(document).
                     bind('keydown', function(evt) {
@@ -167,7 +167,14 @@ if (typeof jQuery !== 'undefined') {
                     bind('keypress', function(evt) {
                         self.nes.input.keyPress(evt);
                     });
-            
+                $(window).
+                    bind('gamepadconnected', function(evt) {
+                        self.nes.input.gamepadConnected(evt.gamepad);
+                    }).
+                    bind('gamepaddisconnected', function(evt) {
+                        self.nes.input.gamepadDisconnected(evt.gamepad);
+                    });
+
                 /*
                  * Sound
                  */

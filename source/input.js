@@ -30,6 +30,8 @@ JSNES.Input = function() {
         KEY_LEFT: 6,
         KEY_RIGHT: 7
     };
+    this.gamepads = [];
+    this.activeGamepads = false;
 
     this.state1 = new Array(8);
     for (i = 0; i < this.state1.length; i++) {
@@ -43,6 +45,7 @@ JSNES.Input = function() {
 
 JSNES.Input.prototype = {
     setKey: function(key, value) {
+        if (this.activeGamepads) return false;
         switch (key) {
             case 88: this.state1[this.keys.KEY_A] = value; break;      // X
             case 89: this.state1[this.keys.KEY_B] = value; break;      // Y (Central European keyboard)
@@ -67,6 +70,30 @@ JSNES.Input.prototype = {
         return false; // preventDefault
     },
 
+    pollGamepads: function() {
+        var index = -1;
+        var active = false;
+        for (var i = 0; i < this.gamepads.length; i++) {
+            var gamepad = this.gamepads[i];
+            if (!gamepad || !gamepad.connected) continue;
+            index++;
+            active = true;
+            var buttons = gamepad.buttons;
+            var axes = gamepad.axes;
+            var state = index === 0 ? this.state1 : (index === 1 ? this.state2 : undefined);
+            if (!state) break;
+            state[this.keys.KEY_A] = (buttons[1].pressed || buttons[3].pressed) ? 0x41 : 0x40;
+            state[this.keys.KEY_B] = (buttons[0].pressed || buttons[2].pressed) ? 0x41 : 0x40;
+            state[this.keys.KEY_SELECT] = buttons[8].pressed ? 0x41 : 0x40;
+            state[this.keys.KEY_START] = buttons[9].pressed ? 0x41 : 0x40;
+            state[this.keys.KEY_UP] = buttons[12].pressed ? 0x41 : 0x40;
+            state[this.keys.KEY_DOWN] = buttons[13].pressed ? 0x41 : 0x40;
+            state[this.keys.KEY_LEFT] = buttons[14].pressed ? 0x41 : 0x40;
+            state[this.keys.KEY_RIGHT] = buttons[15].pressed ? 0x41 : 0x40;
+        }
+        this.activeGamepads = active;
+    },
+
     keyDown: function(evt) {
         if (!this.setKey(evt.keyCode, 0x41) && evt.preventDefault) {
             evt.preventDefault();
@@ -81,5 +108,13 @@ JSNES.Input.prototype = {
     
     keyPress: function(evt) {
         evt.preventDefault();
+    },
+
+    gamepadConnected: function(gamepad) {
+        this.gamepads[gamepad.index] = gamepad;
+    },
+
+    gamepadDisconnected: function(gamepad) {
+        this.gamepads[gamepad.index] = undefined;
     }
 };
