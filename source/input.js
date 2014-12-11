@@ -19,7 +19,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // Input events are bound in the UI
 JSNES.Input = function() {
     var i;
-    
+
+    this.XBox360ButtonConfig = {
+        'A': 0,
+        'B': 1,
+        'X': 2,
+        'Y': 3,
+        'UP': 12,
+        'DOWN': 13,
+        'RIGHT': 15,
+        'LEFT': 14,
+        'SELECT': 8,
+        'START': 9
+    };
+
+    this.buttonConfig = this.XBox360ButtonConfig;
+
     this.buttons = {
         BUTTON_A: 0,
         BUTTON_B: 1,
@@ -41,6 +56,8 @@ JSNES.Input = function() {
     for (i = 0; i < this.state2.length; i++) {
         this.state2[i] = 0x40;
     }
+
+    this.pollGamepads();
 };
 
 JSNES.Input.prototype = {
@@ -75,13 +92,13 @@ JSNES.Input.prototype = {
             evt.preventDefault();
         }
     },
-    
+
     keyUp: function(evt) {
         if (!this.setKey(evt.keyCode, 0x40) && evt.preventDefault) {
             evt.preventDefault();
         }
     },
-    
+
     keyPress: function(evt) {
         evt.preventDefault();
     },
@@ -90,7 +107,33 @@ JSNES.Input.prototype = {
         this.state1[button] = value ? 0x41 : 0x40;
     },
 
+    getGamepads: function() { return (navigator.getGamepads && navigator.getGamepads()) || (navigator.webkitGetGamepads && navigator.webkitGetGamepads()) },
+
+    updateGamepads: function() {
+        // Make sure none of the old gamepads have been unplugged
+        var gamepad, i, gamepads = this.getGamepads();
+        window.myGamepads = gamepads;
+        for(i = 0; i < this.gamepads.length; i++) {
+            gamepad = this.gamepads[i];
+            var rawGamepad = gamepads[i];
+
+            if(gamepad !== rawGamepad) {
+                this.gamepadDisconnected(gamepad);
+            }
+        }
+
+        for (i = 0; i < gamepads.length; i++) {
+            gamepad = gamepads[i];
+            if(!gamepad || !gamepad.connected || this.gamepads[i] === gamepads[i]) continue;
+            this.gamepadConnected(gamepad);
+        }
+    },
+
     pollGamepads: function() {
+        this.updateGamepads();
+
+        var bc = this.buttonConfig;
+
         var index = -1;
         var active = false;
         for (var i = 0; i < this.gamepads.length; i++) {
@@ -99,26 +142,30 @@ JSNES.Input.prototype = {
             index++;
             active = true;
             var buttons = gamepad.buttons;
-            var axes = gamepad.axes;
             var state = index === 0 ? this.state1 : (index === 1 ? this.state2 : undefined);
             if (!state) break;
-            state[this.buttons.BUTTON_A] = (buttons[1].pressed || buttons[3].pressed) ? 0x41 : 0x40;
-            state[this.buttons.BUTTON_B] = (buttons[0].pressed || buttons[2].pressed) ? 0x41 : 0x40;
-            state[this.buttons.BUTTON_SELECT] = buttons[8].pressed ? 0x41 : 0x40;
-            state[this.buttons.BUTTON_START] = buttons[9].pressed ? 0x41 : 0x40;
-            state[this.buttons.BUTTON_UP] = buttons[12].pressed ? 0x41 : 0x40;
-            state[this.buttons.BUTTON_DOWN] = buttons[13].pressed ? 0x41 : 0x40;
-            state[this.buttons.BUTTON_LEFT] = buttons[14].pressed ? 0x41 : 0x40;
-            state[this.buttons.BUTTON_RIGHT] = buttons[15].pressed ? 0x41 : 0x40;
+            state[this.buttons.BUTTON_A] = (buttons[bc.A].pressed || buttons[bc.X].pressed) ? 0x41 : 0x40;
+            state[this.buttons.BUTTON_B] = (buttons[bc.B].pressed || buttons[bc.Y].pressed) ? 0x41 : 0x40;
+            state[this.buttons.BUTTON_SELECT] = buttons[bc.SELECT].pressed ? 0x41 : 0x40;
+            state[this.buttons.BUTTON_START] = buttons[bc.START].pressed ? 0x41 : 0x40;
+            state[this.buttons.BUTTON_UP] = buttons[bc.UP].pressed ? 0x41 : 0x40;
+            state[this.buttons.BUTTON_DOWN] = buttons[bc.DOWN].pressed ? 0x41 : 0x40;
+            state[this.buttons.BUTTON_LEFT] = buttons[bc.LEFT].pressed ? 0x41 : 0x40;
+            state[this.buttons.BUTTON_RIGHT] = buttons[bc.RIGHT].pressed ? 0x41 : 0x40;
         }
         this.activeGamepads = active;
+
+        var self = this;
+        window.requestAnimationFrame(function(){self.pollGamepads()});
     },
 
     gamepadConnected: function(gamepad) {
-        this.gamepads[gamepad.index] = gamepad;
+        console.log("Gamepad connected", gamepad);
+        window.gp = this.gamepads[gamepad.index] = gamepad;
     },
 
     gamepadDisconnected: function(gamepad) {
+        console.log("Gamepad disconnected", gamepad)
         this.gamepads[gamepad.index] = undefined;
     }
 };
